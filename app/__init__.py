@@ -7,6 +7,8 @@ from flask_bootstrap import Bootstrap
 from config import Config
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
+import pytz
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -56,11 +58,11 @@ class ContestResource(Resource):
         if 'url' in request.json:
             contest.url = request.json['url']
 
-        #if 'startDate' in request.json:
-        #    contest.fechaInicio = request.json['startDate']
+        if 'startDate' in request.json:
+            contest.fechaInicio = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
 
-        #if 'endDate' in request.json:
-        #    contest.fechaFin = request.json['endDate']
+        if 'endDate' in request.json:
+            contest.fechaFin = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
 
         if 'payment' in request.json:
             contest.payment = request.json['payment']
@@ -99,8 +101,8 @@ class ContestsResource(Resource):
                 name = request.json['name'],
                 banner = request.json['banner'],
                 url = request.json['url'],
-                #startDate = request.form['startDate'],
-                #endDate = request.form['endDate'],
+                startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S'),
+                endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S'),
                 payment = request.json['payment'],
                 script = request.json['script'],
                 address = request.json['address'],
@@ -138,8 +140,8 @@ class FormResource(Resource):
         if 'lastname' in request.json:
             contest.lastname = request.json['lastname']
 
-        #if 'uploadDate' in request.json:
-        #    contest.fechaInicio = request.json['uploadDate']
+        if 'uploadDate' in request.json:
+            contest.fechaInicio = datetime.strptime(request.json['uploadDate'],'%Y-%m-%dT%H:%M:%S')
 
         if 'state' in request.json:
             contest.state = request.json['state']
@@ -168,27 +170,26 @@ class FormResource(Resource):
         return 'Form deleted', 204
 
 class FormsResource(Resource):
-
     def get(self):
         forms = Form.query.all()
         return forms_schema.dump(forms)
 
     def post(self):
-            new_form = Form(
-                email = request.json['email'],
-                name = request.json['name'],
-                lastname = request.json['lastname'],
-                #uploadDate = request.form['uploadDate'],
-                state = request.json['state'],
-                original = request.json['original'],
-                formatted = request.json['formatted'],
-                notes = request.json['notes'],
-                contest_id = request.json['contest_id']     
-            )
+        new_form = Form(
+            email = request.json['email'],
+            name = request.json['name'],
+            lastname = request.json['lastname'],
+            uploadDate = datetime.strptime(request.json['uploadDate'],'%Y-%m-%dT%H:%M:%S'),
+            state = request.json['state'],
+            original = request.json['original'],
+            formatted = request.json['formatted'],
+            notes = request.json['notes'],
+            contest_id = request.json['contest_id']     
+        )
 
-            db.session.add(new_form)
-            db.session.commit()
-            return form_schema.dump(new_form)
+        db.session.add(new_form)
+        db.session.commit()
+        return form_schema.dump(new_form)
 
 class UserResource(Resource):
     def post(self):
