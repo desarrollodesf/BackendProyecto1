@@ -1,14 +1,17 @@
 import os.path
+from queue import Empty
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bootstrap import Bootstrap
+from sqlalchemy import null
 from config import Config
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
-import pytz
 from datetime import datetime
+import pytz
+from tzlocal import get_localzone
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -34,7 +37,7 @@ if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
 
 class Contest_Schema(ma.Schema):
     class Meta:
-        fields = ("id", "name", "banner", "url", "startDate", "endDate", "payment", "script", "address", "notes" "user_id")
+        fields = ("id", "name", "banner", "url", "startDate", "endDate", "payment", "script", "address", "notes", "user_id")
 
 contest_schema = Contest_Schema()
 contests_schema = Contest_Schema(many = True)
@@ -49,6 +52,18 @@ class ContestResource(Resource):
 
         contest = Contest.query.get_or_404(contest_id)
 
+        fecha_inicio = contest.fechaInicio
+        fecha_fin = contest.fechaFin
+
+        if 'startDate' in request.json:
+            contest.fechaInicio = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
+
+        if 'endDate' in request.json:
+            contest.fechaFin = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
+
+        if fecha_inicio > fecha_fin:
+            return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
+            
         if 'name' in request.json:
             contest.name = request.json['name']
 
@@ -57,12 +72,6 @@ class ContestResource(Resource):
 
         if 'url' in request.json:
             contest.url = request.json['url']
-
-        if 'startDate' in request.json:
-            contest.fechaInicio = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
-
-        if 'endDate' in request.json:
-            contest.fechaFin = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
 
         if 'payment' in request.json:
             contest.payment = request.json['payment']
@@ -78,7 +87,7 @@ class ContestResource(Resource):
 
         if 'user_id' in request.json:
             contest.user_id = request.json['user_id']
-        
+
         db.session.commit()
         return contest_schema.dump(contest)
 
@@ -95,8 +104,14 @@ class ContestsResource(Resource):
     def get(self):
         contests = Contest.query.all()
         return contests_schema.dump(contests)
-
     def post(self):
+
+            if not request.json['startDate']:
+                return 'Fecha de inicio no puede estar vacía', 400
+
+            if not request.json['endDate']:
+                return 'Fecha de fin no puede estar vacía', 400
+
             new_contest = Contest(
                 name = request.json['name'],
                 banner = request.json['banner'],
@@ -110,6 +125,9 @@ class ContestsResource(Resource):
                 user_id = request.json['user_id']     
             )
 
+            if new_contest.startDate > new_contest.endDate:
+                return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
+        
             db.session.add(new_contest)
             db.session.commit()
             return contest_schema.dump(new_contest)
@@ -129,37 +147,16 @@ class FormResource(Resource):
 
     def put(self, form_id):
 
-        contest = Form.query.get_or_404(form_id)
-
-        if 'email' in request.json:
-            contest.email = request.json['email']
-
-        if 'name' in request.json:
-            contest.name = request.json['name']
-
-        if 'lastname' in request.json:
-            contest.lastname = request.json['lastname']
-
-        if 'uploadDate' in request.json:
-            contest.fechaInicio = datetime.strptime(request.json['uploadDate'],'%Y-%m-%dT%H:%M:%S')
+        form = Form.query.get_or_404(form_id)
 
         if 'state' in request.json:
-            contest.state = request.json['state']
+            form.state = request.json['state']
 
-        if 'original' in request.json:
-            contest.original = request.json['original']
-        
         if 'formatted' in request.json:
-            contest.formatted = request.json['formatted']
+            form.formatted = request.json['formatted']
 
-        if 'notes' in request.json:
-            contest.notes = request.json['notes']
-
-        if 'contest_id' in request.json:
-            contest.contest_id = request.json['contest_id']
-        
         db.session.commit()
-        return form_schema.dump(contest)
+        return form_schema.dump(form)
 
 
     def delete(self, form_id):
@@ -170,26 +167,27 @@ class FormResource(Resource):
         return 'Form deleted', 204
 
 class FormsResource(Resource):
+
     def get(self):
         forms = Form.query.all()
         return forms_schema.dump(forms)
 
     def post(self):
-        new_form = Form(
-            email = request.json['email'],
-            name = request.json['name'],
-            lastname = request.json['lastname'],
-            uploadDate = datetime.strptime(request.json['uploadDate'],'%Y-%m-%dT%H:%M:%S'),
-            state = request.json['state'],
-            original = request.json['original'],
-            formatted = request.json['formatted'],
-            notes = request.json['notes'],
-            contest_id = request.json['contest_id']     
-        )
+            new_form = Form(
+                email = request.json['email'],
+                name = request.json['name'],
+                lastname = request.json['lastname'],
+                uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S'),
+                state = request.json['state'],
+                original = request.json['original'],
+                formatted = request.json['formatted'],
+                notes = request.json['notes'],
+                contest_id = request.json['contest_id']     
+            )
 
-        db.session.add(new_form)
-        db.session.commit()
-        return form_schema.dump(new_form)
+            db.session.add(new_form)
+            db.session.commit()
+            return form_schema.dump(new_form)
 
 class UserResource(Resource):
     def post(self):
