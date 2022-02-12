@@ -186,9 +186,9 @@ class FormsResource(Resource):
                 name = request.json['name'],
                 lastname = request.json['lastname'],    
                 uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S'),
-                state = request.json['state'],
+                state = "En proceso",
                 original = request.json['original'],
-                formatted = request.json['formatted'],
+                formatted = "",
                 notes = request.json['notes'],
                 contest_id = request.json['contest_id']     
             )
