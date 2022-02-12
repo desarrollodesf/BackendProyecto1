@@ -28,7 +28,7 @@ class Contest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(160))
     banner = db.Column(db.String(160))
-    url = db.Column(db.String(160))
+    url = db.Column(db.String(160), unique=True)
     startDate = db.Column(db.DateTime, index=True)
     endDate = db.Column(db.DateTime, index=True)
     payment = db.Column(db.Integer)
@@ -38,7 +38,7 @@ class Contest(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return '<Post {}>'.format(self.body)
+        return '<Contest {}>'.format(self.body)
 
 
 class Form(db.Model):
@@ -52,3 +52,6 @@ class Form(db.Model):
     formatted = db.Column(db.String(160)) ##BLANK
     notes = db.Column(db.String(160)) 
     contest_id = db.Column(db.Integer, db.ForeignKey('contest.id'))
+
+    def __repr__(self):
+        return '<Form {}>'.format(self.body)
