@@ -47,8 +47,8 @@ class Form(db.Model):
     name = db.Column(db.String(160))
     lastname = db.Column(db.String(160), index=True)
     uploadDate = db.Column(db.DateTime, index=True)
-    state = db.Column(db.String(160))
-    original = db.Column(db.String(160))
-    formatted = db.Column(db.String(160))
+    state = db.Column(db.String(160)) ##
+    original = db.Column(db.String(160)) ##RUTA DEL ARCHIVO
+    formatted = db.Column(db.String(160)) ##BLANK
     notes = db.Column(db.String(160)) 
     contest_id = db.Column(db.Integer, db.ForeignKey('contest.id'))

@@ -52,14 +52,14 @@ class ContestResource(Resource):
 
         contest = Contest.query.get_or_404(contest_id)
 
-        fecha_inicio = contest.fechaInicio
-        fecha_fin = contest.fechaFin
+        fecha_inicio = contest.startDate
+        fecha_fin = contest.endDate
 
         if 'startDate' in request.json:
-            contest.fechaInicio = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
+            contest.startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
 
         if 'endDate' in request.json:
-            contest.fechaFin = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
+            contest.endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
 
         if fecha_inicio > fecha_fin:
             return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
@@ -87,6 +87,10 @@ class ContestResource(Resource):
 
         if 'user_id' in request.json:
             contest.user_id = request.json['user_id']
+
+        test_list = User.query.all()
+        if next((x for x in test_list if str(x.id) == contest.user_id), None) is None:
+            return 'El ID del usuario utilizado para crear el concurso no existe', 400
 
         db.session.commit()
         return contest_schema.dump(contest)
@@ -127,7 +131,11 @@ class ContestsResource(Resource):
 
             if new_contest.startDate > new_contest.endDate:
                 return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
-        
+
+            test_list = User.query.all()
+            if next((x for x in test_list if str(x.id) == new_contest.user_id), None) is None:
+                return 'El ID del usuario utilizado para crear el concurso no existe', 400
+
             db.session.add(new_contest)
             db.session.commit()
             return contest_schema.dump(new_contest)
@@ -176,7 +184,7 @@ class FormsResource(Resource):
             new_form = Form(
                 email = request.json['email'],
                 name = request.json['name'],
-                lastname = request.json['lastname'],
+                lastname = request.json['lastname'],    
                 uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S'),
                 state = request.json['state'],
                 original = request.json['original'],
@@ -184,6 +192,10 @@ class FormsResource(Resource):
                 notes = request.json['notes'],
                 contest_id = request.json['contest_id']     
             )
+                    
+            test_list = Form.query.all()
+            if next((x for x in test_list if str(x.id) == new_form.contest_id), None) is None:
+                return 'El ID del concurso utilizado para enviar un formulario no existe', 400
 
             db.session.add(new_form)
             db.session.commit()
