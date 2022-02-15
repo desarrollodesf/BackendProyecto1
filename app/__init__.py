@@ -55,6 +55,10 @@ class ContestResource(Resource):
 
         fecha_inicio = contest.startDate
         fecha_fin = contest.endDate
+        user = Contest.query.filter_by(url=request.json['url']).first()
+        
+        if user is not None:
+            return 'La URL del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otra personalización de URL', 400
 
         if 'startDate' in request.json:
             contest.startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
@@ -91,7 +95,7 @@ class ContestResource(Resource):
 
         test_list = User.query.all()
         if next((x for x in test_list if str(x.id) == contest.user_id), None) is None:
-            return 'El ID del usuario utilizado para crear el concurso no existe', 400
+            return 'El ID del usuario utilizado para crear el concurso no existe', 400 
 
         db.session.commit()
         return contest_schema.dump(contest)
@@ -117,10 +121,13 @@ class ContestsResource(Resource):
             if not request.json['endDate']:
                 return 'Fecha de fin no puede estar vacía', 400
 
+            if not request.json['name']:
+                return 'No se puede dejar el nombre del concurso vacío', 400
+
             new_contest = Contest(
                 name = request.json['name'],
                 banner = request.json['banner'],
-                url = request.json['url'],
+                url = request.json['name'],
                 startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S'),
                 endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S'),
                 payment = request.json['payment'],
@@ -136,6 +143,10 @@ class ContestsResource(Resource):
             test_list = User.query.all()
             if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
                 return 'El ID del usuario utilizado para crear el concurso no existe', 400
+
+            test_list = Contest.query.all()
+            if not next((x for x in test_list if str(x.url) == str(new_contest.url)), None) is None:
+                return 'El nombre del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otro nombre para crear su concurso.', 400
 
             db.session.add(new_contest)
             db.session.commit()
@@ -234,6 +245,12 @@ class FormsByContestResource(Resource):
         forms = Form.query.filter_by(contest_id=contest.id)
         return forms_schema.dump(forms)
 
+class PendingToConvertResource(Resource):
+    def get(self):
+        forms = Form.query.filter_by(state = "En proceso")
+        return forms_schema.dump(forms)
+
+
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
 api.add_resource(FormResource,'/api/form/<int:form_id>')
@@ -241,3 +258,4 @@ api.add_resource(ContestsResource,'/api/contests/')
 api.add_resource(ContestResource,'/api/contest/<int:contest_id>')
 api.add_resource(ContestsByUserResource,'/api/administrador/<int:user_id>/contests')
 api.add_resource(FormsByContestResource,'/api/contests/<string:URL>/forms')
+api.add_resource(PendingToConvertResource,'/api/forms/pendingToConvert')
