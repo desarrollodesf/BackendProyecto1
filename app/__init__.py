@@ -13,6 +13,7 @@ from datetime import datetime
 import pytz
 from tzlocal import get_localzone
 
+
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -133,7 +134,7 @@ class ContestsResource(Resource):
                 return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
 
             test_list = User.query.all()
-            if next((x for x in test_list if str(x.id) == new_contest.user_id), None) is None:
+            if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
                 return 'El ID del usuario utilizado para crear el concurso no existe', 400
 
             db.session.add(new_contest)
@@ -193,8 +194,8 @@ class FormsResource(Resource):
                 contest_id = request.json['contest_id']     
             )
                     
-            test_list = Form.query.all()
-            if next((x for x in test_list if str(x.id) == new_form.contest_id), None) is None:
+            test_list = Contest.query.all()
+            if next((x for x in test_list if str(x.id) == str(new_form.contest_id)), None) is None:
                 return 'El ID del concurso utilizado para enviar un formulario no existe', 400
 
             db.session.add(new_form)
