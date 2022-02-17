@@ -263,7 +263,7 @@ class PendingToConvertResource(Resource):
 
 class Admin_Schema(ma.Schema):
     class Meta:
-        fields = ("id")
+        fields = ("id", "name", "lastname")
 
 admin_schema = Admin_Schema()
 
