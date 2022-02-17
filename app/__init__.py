@@ -16,7 +16,7 @@ from tzlocal import get_localzone
 
 
 app = Flask(__name__)
-CORS(app)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 login = LoginManager(app)
