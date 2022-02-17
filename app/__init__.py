@@ -238,6 +238,15 @@ class ContestsByUserResource(Resource):
         contests = Contest.query.filter_by(user_id=user_id)
         return contests_schema.dump(contests)
 
+class ContestByUrlResource(Resource):
+    
+    def get(self, URL):
+        contest = Contest.query.filter_by(url = URL).first()
+        if contest is None:
+            return 'URL no encontrado', 400
+        else:
+            return contest_schema.dump(contest)
+
 class FormsByContestResource(Resource):
     
     def get(self, URL):
@@ -252,6 +261,13 @@ class PendingToConvertResource(Resource):
         forms = Form.query.filter_by(state = "En proceso")
         return forms_schema.dump(forms)
 
+class LoginResource(Resource):
+    def post(self):
+        user = User.query.filter_by(email=request.json["email"]).first()
+        if user is None or not user.check_password(request.json["password"]):
+            return 'Invalid username or password', 400
+        return 'Usuario autenticado', 204
+        
 
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
@@ -260,4 +276,6 @@ api.add_resource(ContestsResource,'/api/contests/')
 api.add_resource(ContestResource,'/api/contest/<int:contest_id>')
 api.add_resource(ContestsByUserResource,'/api/administrador/<int:user_id>/contests')
 api.add_resource(FormsByContestResource,'/api/contests/<string:URL>/forms')
+api.add_resource(ContestByUrlResource,'/api/contests/<string:URL>/contests')
 api.add_resource(PendingToConvertResource,'/api/forms/pendingToConvert')
+api.add_resource(LoginResource,'/api/login/')
