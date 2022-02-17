@@ -10,11 +10,13 @@ from config import Config
 from flask_marshmallow import Marshmallow
 from flask_restful import Api, Resource
 from datetime import datetime
+from flask_cors import CORS
 import pytz
 from tzlocal import get_localzone
 
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 login = LoginManager(app)
