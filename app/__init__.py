@@ -261,12 +261,18 @@ class PendingToConvertResource(Resource):
         forms = Form.query.filter_by(state = "En proceso")
         return forms_schema.dump(forms)
 
+class Admin_Schema(ma.Schema):
+    class Meta:
+        fields = ("id")
+
+admin_schema = Admin_Schema()
+
 class LoginResource(Resource):
     def post(self):
         user = User.query.filter_by(email=request.json["email"]).first()
         if user is None or not user.check_password(request.json["password"]):
             return 'Invalid username or password', 400
-        return 'Usuario autenticado', 204
+        return admin_schema.dump(user)
         
 
 api.add_resource(UserResource,'/api/administrador/')   
