@@ -314,8 +314,9 @@ class GetContestImageResource(Resource):
 class GetOriginalAudioResource(Resource):
     def get(self, form_id):
         audio = Form.query.filter_by(id=form_id).first()
+
         try:
-            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", audio.original, as_attachment=True)
+            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", os.path.basename(audio.original), as_attachment=True)
         except FileNotFoundError:
             return(400)
 
@@ -323,7 +324,7 @@ class GetConvertedAudioResource(Resource):
     def get(self, form_id):
         audio = Form.query.filter_by(id=form_id).first()
         try:
-            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", audio.formatted, as_attachment=True)
+            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", os.path.basename(audio.formatted), as_attachment=True)
         except FileNotFoundError:
             return(400)
 
