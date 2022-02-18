@@ -28,7 +28,7 @@ login = LoginManager(app)
 login.login_view = 'login'
 
 FILE_PATH = "/files/"
-IMAGE_PATH = "/imagen/"
+IMAGE_PATH = "/home/n.rozo10/BackendProyecto1/imagen/"
 from app.models import Contest, Form, User
 
 def setup_database(app):
