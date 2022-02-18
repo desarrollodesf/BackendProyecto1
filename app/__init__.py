@@ -284,33 +284,16 @@ class LoginResource(Resource):
         if user is None or not user.check_password(request.json["password"]):
             return 'Invalid username or password', 400
         return admin_schema.dump(user)
-        
 
 
-class PostFileResource():
-    def post(self, filename):
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            return 'No file part', 404
-        file = request.files['file']
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-       # if file.filename == '':
-        #    flash('No selected file')
-         #   return redirect(request.url)
-        #if file and allowed_file(file.filename):
-         #   filename = secure_filename(file.filename)
-        #    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        #    return redirect(url_for('download_file', name=filename))
-
-
-class GetFile():
-    """Download a file."""
-    def get(self, fileName):
-        return "", 200
-      #  return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
-
-
+class GetContestImageResource(Resource):
+    def get(self, contest_id):     
+        contest = Contest.query.filter_by(id=contest_id).first()
+        try:
+            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
+            return send_from_directory("/home/n.rozo10/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
+        except FileNotFoundError:
+            return(404)
 
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
@@ -322,3 +305,4 @@ api.add_resource(FormsByContestResource,'/api/contests/<string:URL>/forms')
 api.add_resource(ContestByUrlResource,'/api/contests/<string:URL>/contests')
 api.add_resource(PendingToConvertResource,'/api/forms/pendingToConvert')
 api.add_resource(LoginResource,'/api/login/')
+api.add_resource(GetContestImageResource,'/api/contest/<int:contest_id>/image')
