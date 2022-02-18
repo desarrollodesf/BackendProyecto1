@@ -55,51 +55,57 @@ class ContestResource(Resource):
 
     def put(self, contest_id):
 
+        data = request.form
         contest = Contest.query.get_or_404(contest_id)
-
+        
         fecha_inicio = contest.startDate
         fecha_fin = contest.endDate
-        user = Contest.query.filter_by(url=request.json['url']).first()
-        
-        if user is not None:
-            return 'La URL del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otra personalización de URL', 400
 
-        if 'startDate' in request.json:
-            contest.startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
+        if 'startDate' in data:
+            contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S')
 
-        if 'endDate' in request.json:
-            contest.endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')
+        if 'endDate' in data:
+            contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S')
 
         if fecha_inicio > fecha_fin:
             return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
             
-        if 'name' in request.json:
-            contest.name = request.json['name']
+        if 'name' in data:
+            contest.name = data['name']
 
-        if 'banner' in request.json:
-            contest.banner = request.json['banner']
+        if 'url' in data:
+            if contest.url != data['url']:
+                user = Contest.query.filter_by(url=data['url']).first()
+                if user is not None:
+                    return 'La URL del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otra personalización de URL', 400
+                contest.url = data['url']
 
-        if 'url' in request.json:
-            contest.url = request.json['url']
+        if 'payment' in data:
+            contest.payment = data['payment']
 
-        if 'payment' in request.json:
-            contest.payment = request.json['payment']
-
-        if 'script' in request.json:
-            contest.script = request.json['script']
+        if 'script' in data:
+            contest.script = data['script']
         
-        if 'address' in request.json:
-            contest.address = request.json['address']
+        if 'address' in data:
+            contest.address = data['address']
 
-        if 'notes' in request.json:
-            contest.notes = request.json['notes']
+        if 'notes' in data:
+            contest.notes = data['notes']
 
-        if 'user_id' in request.json:
-            contest.user_id = request.json['user_id']
+        if 'user_id' in data:
+            contest.user_id = data['user_id']
 
         test_list = User.query.all()
         if next((x for x in test_list if str(x.id) == contest.user_id), None) is None:
             return 'El ID del usuario utilizado para crear el concurso no existe', 400 
+
+        if 'file' in request.files:
+            f = request.files['file']
+            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  f.filename
+            contest.nombreBanner = f.filename
+            contest.banner = PATH_GUARDAR
+            f.save(PATH_GUARDAR)
+
 
         db.session.commit()
         return contest_schema.dump(contest)
@@ -131,7 +137,6 @@ class ContestsResource(Resource):
             PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
             new_contest = Contest(
                 name = data['name'],
-                nombreBanner = data['nombreBanner'],
                 banner = PATH_GUARDAR,
                 url = data['name'],
                 startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S'),
@@ -159,7 +164,7 @@ class ContestsResource(Resource):
             
             f = request.files['file']
             f.save(PATH_GUARDAR)
-
+            new_contest.nombreBanner = f.filename
             db.session.commit()
             return contest_schema.dump(new_contest)
 
@@ -204,27 +209,38 @@ class FormsResource(Resource):
         return forms_schema.dump(forms)
 
     def post(self):
-            new_form = Form(
-                email = request.json['email'],
-                name = request.json['name'],
-                lastname = request.json['lastname'],    
-                uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S'),
-                state = "En proceso",
-                original = request.json['original'],
-                formatted = "",
-                notes = request.json['notes'],
-                contest_id = request.json['contest_id'],     
-                guid = uuid.uuid4().hex,
-                file = request.json['contest_id']
-            )
-                    
-            test_list = Contest.query.all()
-            if next((x for x in test_list if str(x.id) == str(new_form.contest_id)), None) is None:
-                return 'El ID del concurso utilizado para enviar un formulario no existe', 400
+        
+        f = request.files['file']
+        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  data['nombreBanner']
+        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
 
-            db.session.add(new_form)
-            db.session.commit()
-            return form_schema.dump(new_form)
+        forms = Form.query.filter_by(original=PATH_GUARDAR).first()
+        if forms is not None:
+            return "El archivo ya existe", 400
+
+        data = request.form
+        new_form = Form(
+            email = data['email'],
+            name = data['name'],
+            lastname = data['lastname'],    
+            uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S'),
+            state = "En proceso",
+            original = PATH_GUARDAR,
+            formatted = "",
+            notes = data['notes'],
+            contest_id = data['contest_id'],     
+            guid = uuid.uuid4().hex,
+        )
+    
+        test_list = Contest.query.all()
+        if next((x for x in test_list if str(x.id) == str(new_form.contest_id)), None) is None:
+            return 'El ID del concurso utilizado para enviar un formulario no existe', 400
+
+        f.save(PATH_GUARDAR)
+
+        db.session.add(new_form)
+        db.session.commit()
+        return form_schema.dump(new_form)
 
 class UserResource(Resource):
     def post(self):
