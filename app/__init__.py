@@ -311,6 +311,24 @@ class GetContestImageResource(Resource):
         except FileNotFoundError:
             return(404)
 
+class GetOriginalAudioResource(Resource):
+    def get(self, form_id):
+        audio = Form.query.filter_by(id=form_id).first()
+        try:
+            return send_from_directory(audio.original, as_attachment=True)
+        except FileNotFoundError:
+            return(400)
+
+class GetConvertedAudioResource(Resource):
+    def get(self, form_id):
+        audio = Form.query.filter_by(id=form_id).first()
+        try:
+            return send_from_directory(audio.formatted, as_attachment=True)
+        except FileNotFoundError:
+            return(400)
+
+
+
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
 api.add_resource(FormResource,'/api/form/<int:form_id>')
@@ -322,3 +340,5 @@ api.add_resource(ContestByUrlResource,'/api/contests/<string:URL>/contests')
 api.add_resource(PendingToConvertResource,'/api/forms/pendingToConvert')
 api.add_resource(LoginResource,'/api/login/')
 api.add_resource(GetContestImageResource,'/api/contest/<int:contest_id>/image')
+api.add_resource(GetOriginalAudioResource,'/api/form/<int:form_id>/original')
+api.add_resource(GetConvertedAudioResource,'/api/form/<int:form_id>/convertido')
