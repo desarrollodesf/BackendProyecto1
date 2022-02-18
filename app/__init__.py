@@ -28,7 +28,7 @@ login = LoginManager(app)
 login.login_view = 'login'
 
 FILE_PATH = "/files/"
-IMAGE_PATH = "/home/n.rozo10/BackendProyecto1/imagen/"
+
 from app.models import Contest, Form, User
 
 def setup_database(app):
@@ -119,27 +119,28 @@ class ContestsResource(Resource):
         return contests_schema.dump(contests)
     def post(self):
 
-            if not request.json['startDate']:
+            data = request.form
+            if not data['startDate']:
                 return 'Fecha de inicio no puede estar vacía', 400
 
-            if not request.json['endDate']:
+            if not data['endDate']:
                 return 'Fecha de fin no puede estar vacía', 400
 
-            if not request.json['name']:
+            if not data['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
-            PATH_GUARDAR = IMAGE_PATH  +  request.json['nombreBanner']
+            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
             new_contest = Contest(
-                name = request.json['name'],
-                nombreBanner = request.json['nombreBanner'],
+                name = data['name'],
+                nombreBanner = data['nombreBanner'],
                 banner = PATH_GUARDAR,
-                url = request.json['name'],
-                startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S'),
-                endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S'),
-                payment = request.json['payment'],
-                script = request.json['script'],
-                address = request.json['address'],
-                notes = request.json['notes'],
-                user_id = request.json['user_id']
+                url = data['name'],
+                startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S'),
+                endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S'),
+                payment = data['payment'],
+                script = data['script'],
+                address = data['address'],
+                notes = data['notes'],
+                user_id = data['user_id']
   
             )
 
@@ -155,9 +156,9 @@ class ContestsResource(Resource):
                 return 'El nombre del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otro nombre para crear su concurso.', 400
 
             db.session.add(new_contest)
-
-            with open(os.path.join(PATH_GUARDAR, new_contest.nombreBanner), "wb") as fp:
-                fp.write(imagen = request.files['file'])
+            
+            f = request.files['file']
+            f.save(PATH_GUARDAR)
 
             db.session.commit()
             return contest_schema.dump(new_contest)

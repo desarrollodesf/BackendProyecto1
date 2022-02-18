@@ -27,6 +27,7 @@ def load_user(id):
 class Contest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(160))
+    nombreBanner = db.Column(db.String(160))
     banner = db.Column(db.String(160))
     url = db.Column(db.String(160), unique=True)
     startDate = db.Column(db.DateTime, index=True)
@@ -52,6 +53,7 @@ class Form(db.Model):
     formatted = db.Column(db.String(160)) ##BLANK
     notes = db.Column(db.String(160)) 
     contest_id = db.Column(db.Integer, db.ForeignKey('contest.id'))
+    guid = db.Column(db.String(160)) 
 
     def __repr__(self):
         return '<Form {}>'.format(self.body)
