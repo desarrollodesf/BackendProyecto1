@@ -211,7 +211,7 @@ class FormsResource(Resource):
     def post(self):
         
         f = request.files['file']
-        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  data['nombreBanner']
+        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
         #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
