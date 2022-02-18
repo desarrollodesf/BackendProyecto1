@@ -1,6 +1,6 @@
 import os.path
 from queue import Empty
-from flask import Flask, request
+from flask import Flask, request, abort, jsonify, send_from_directory, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -13,7 +13,7 @@ from datetime import datetime
 from flask_cors import CORS
 import pytz
 from tzlocal import get_localzone
-
+import uuid
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -27,6 +27,8 @@ bootstrap = Bootstrap(app)
 login = LoginManager(app)
 login.login_view = 'login'
 
+FILE_PATH = "/files/"
+IMAGE_PATH = "/imagen/"
 from app.models import Contest, Form, User
 
 def setup_database(app):
@@ -125,10 +127,11 @@ class ContestsResource(Resource):
 
             if not request.json['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
-
+            PATH_GUARDAR = IMAGE_PATH  +  request.json['nombreBanner']
             new_contest = Contest(
                 name = request.json['name'],
-                banner = request.json['banner'],
+                nombreBanner = request.json['nombreBanner'],
+                banner = PATH_GUARDAR,
                 url = request.json['name'],
                 startDate = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S'),
                 endDate = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S'),
@@ -136,7 +139,8 @@ class ContestsResource(Resource):
                 script = request.json['script'],
                 address = request.json['address'],
                 notes = request.json['notes'],
-                user_id = request.json['user_id']     
+                user_id = request.json['user_id']
+  
             )
 
             if new_contest.startDate > new_contest.endDate:
@@ -151,6 +155,10 @@ class ContestsResource(Resource):
                 return 'El nombre del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otro nombre para crear su concurso.', 400
 
             db.session.add(new_contest)
+
+            with open(os.path.join(PATH_GUARDAR, new_contest.nombreBanner), "wb") as fp:
+                fp.write(imagen = request.json['imagen'])
+
             db.session.commit()
             return contest_schema.dump(new_contest)
 
@@ -204,7 +212,9 @@ class FormsResource(Resource):
                 original = request.json['original'],
                 formatted = "",
                 notes = request.json['notes'],
-                contest_id = request.json['contest_id']     
+                contest_id = request.json['contest_id'],     
+                guid = uuid.uuid4().hex,
+                file = request.json['contest_id']
             )
                     
             test_list = Contest.query.all()
@@ -274,6 +284,32 @@ class LoginResource(Resource):
             return 'Invalid username or password', 400
         return admin_schema.dump(user)
         
+
+
+class PostFileResource():
+    def post(self, filename):
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            return 'No file part', 404
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+       # if file.filename == '':
+        #    flash('No selected file')
+         #   return redirect(request.url)
+        #if file and allowed_file(file.filename):
+         #   filename = secure_filename(file.filename)
+        #    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        #    return redirect(url_for('download_file', name=filename))
+
+
+class GetFile():
+    """Download a file."""
+    def get(self, fileName):
+        return "", 200
+      #  return send_from_directory(UPLOAD_DIRECTORY, path, as_attachment=True)
+
+
 
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
