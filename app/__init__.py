@@ -157,7 +157,7 @@ class ContestsResource(Resource):
             db.session.add(new_contest)
 
             with open(os.path.join(PATH_GUARDAR, new_contest.nombreBanner), "wb") as fp:
-                fp.write(imagen = request.json['imagen'])
+                fp.write(imagen = request.files['file'])
 
             db.session.commit()
             return contest_schema.dump(new_contest)
