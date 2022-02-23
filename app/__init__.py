@@ -219,9 +219,14 @@ class FormsResource(Resource):
 
     def post(self):
         
+        numberFile=Form.query.count()
+        if numberFile == 0:
+            numberFile = 1
+        else: 
+            numberFile = numberFile+1
         f = request.files['file']
         PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
-        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
+        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/" +  str(numberFile)  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
         if forms is not None:
