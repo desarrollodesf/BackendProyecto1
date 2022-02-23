@@ -21,7 +21,7 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 login = LoginManager(app)
 api = Api(app)
-app.config['MAX_CONTENT_LENGTH'] = 102400
+#app.config['MAX_CONTENT_LENGTH'] = 102400
 ma = Marshmallow(app)
 bootstrap = Bootstrap(app)
 
@@ -136,6 +136,8 @@ class ContestsResource(Resource):
             if not data['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
             PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
+            #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
+
             new_contest = Contest(
                 name = data['name'],
                 banner = PATH_GUARDAR,
@@ -171,7 +173,7 @@ class ContestsResource(Resource):
 
 class Form_Schema(ma.Schema):
     class Meta:
-        fields = ("id","email", "name", "lastname", "uploadDate", "state", "original", "formatted", "notes", "contest_id")
+        fields = ("id","email", "name", "lastname", "uploadDate", "state", "original", "formatted", "notes", "contest_id", "startConversion", "finishConversion")
 
 form_schema = Form_Schema()
 forms_schema = Form_Schema(many = True)
