@@ -135,8 +135,8 @@ class ContestsResource(Resource):
 
             if not data['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
-            #PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
-            PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
+            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
+            #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
 
             new_contest = Contest(
                 name = data['name'],
@@ -195,10 +195,10 @@ class FormResource(Resource):
             form.formatted = request.json['formatted']
 
         if 'startConversion' in request.json:
-            form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%dT%H:%M:%S')
+            form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')
 
         if 'finishConversion' in request.json:
-            form.finishConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%dT%H:%M:%S')     
+            form.finishConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')     
 
         db.session.commit()
         return form_schema.dump(form)
@@ -220,8 +220,8 @@ class FormsResource(Resource):
     def post(self):
         
         f = request.files['file']
-        #PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
-        PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
+        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
+        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
         if forms is not None:
@@ -315,8 +315,8 @@ class GetContestImageResource(Resource):
     def get(self, contest_id):     
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
-            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
-            return send_from_directory("/home/n.rozo10/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
+            return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
+            #return send_from_directory("/home/n.rozo10/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
         except FileNotFoundError:
             return(404)
 
