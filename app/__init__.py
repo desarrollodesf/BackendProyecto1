@@ -21,6 +21,7 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 login = LoginManager(app)
 api = Api(app)
+app.config['MAX_CONTENT_LENGTH'] = 102400
 ma = Marshmallow(app)
 bootstrap = Bootstrap(app)
 
@@ -190,6 +191,12 @@ class FormResource(Resource):
 
         if 'formatted' in request.json:
             form.formatted = request.json['formatted']
+
+        if 'startConversion' in request.json:
+            form.startConversion = datetime.strptime(request.json['startDate'],'%Y-%m-%dT%H:%M:%S')
+
+        if 'finishConversion' in request.json:
+            form.finishConversion = datetime.strptime(request.json['endDate'],'%Y-%m-%dT%H:%M:%S')     
 
         db.session.commit()
         return form_schema.dump(form)

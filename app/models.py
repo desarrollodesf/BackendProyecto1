@@ -54,6 +54,8 @@ class Form(db.Model):
     notes = db.Column(db.String(160)) 
     contest_id = db.Column(db.Integer, db.ForeignKey('contest.id'))
     guid = db.Column(db.String(160)) 
-
+    startConversion = db.Column(db.DateTime)
+    finishConversion = db.Column(db.DateTime)
+    
     def __repr__(self):
         return '<Form {}>'.format(self.body)
