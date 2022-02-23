@@ -135,8 +135,8 @@ class ContestsResource(Resource):
 
             if not data['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
-            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
-            #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
+            #PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
+            PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
 
             new_contest = Contest(
                 name = data['name'],
@@ -220,8 +220,8 @@ class FormsResource(Resource):
     def post(self):
         
         f = request.files['file']
-        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
-        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
+        #PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
+        PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/"  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
         if forms is not None:
