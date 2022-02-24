@@ -225,7 +225,7 @@ class FormsResource(Resource):
         else: 
             numberFile = numberFile+1
         f = request.files['file']
-        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"  +  f.filename
+        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"+  str(numberFile)   +  f.filename
         #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/" +  str(numberFile)  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
