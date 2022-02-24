@@ -256,6 +256,11 @@ class FormsResource(Resource):
         db.session.commit()
         return form_schema.dump(new_form)
 
+    def delete(self):
+        forms = Form.query.all()
+        Form.db.session.delete(forms)
+        return 'Forms deleted', 204
+
 class UserResource(Resource):
     def post(self):
         name = request.json['name']
