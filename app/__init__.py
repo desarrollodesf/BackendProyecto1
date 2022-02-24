@@ -198,7 +198,7 @@ class FormResource(Resource):
             form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')
 
         if 'finishConversion' in request.json:
-            form.finishConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')     
+            form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S')     
 
         db.session.commit()
         return form_schema.dump(form)
