@@ -257,8 +257,8 @@ class FormsResource(Resource):
         return form_schema.dump(new_form)
 
     def delete(self):
-        forms = Form.query.all()
-        Form.db.session.delete(forms)
+        Form.query.delete()
+        db.session.commit()
         return 'Forms deleted', 204
 
 class UserResource(Resource):
