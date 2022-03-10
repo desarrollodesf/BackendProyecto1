@@ -19,6 +19,8 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config.from_object(Config)
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+migrate.init_app(app, db)
 login = LoginManager(app)
 api = Api(app)
 #app.config['MAX_CONTENT_LENGTH'] = 102400
@@ -32,13 +34,14 @@ FILE_PATH = "/files/"
 
 from app.models import Contest, Form, User
 
-def setup_database(app):
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
+#db.create_all()
+#def setup_database(app):
+#    db.init_app(app)
+#    with app.app_context():
+#        db.create_all()
 
-if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
-    setup_database(app)
+#if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
+ #   setup_database(app)
 
 
 class Contest_Schema(ma.Schema):
