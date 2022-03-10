@@ -102,7 +102,7 @@ class ContestResource(Resource):
 
         if 'file' in request.files:
             f = request.files['file']
-            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  f.filename
+            PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  f.filename
             contest.nombreBanner = f.filename
             contest.banner = PATH_GUARDAR
             f.save(PATH_GUARDAR)
@@ -135,7 +135,7 @@ class ContestsResource(Resource):
 
             if not data['name']:
                 return 'No se puede dejar el nombre del concurso vacío', 400
-            PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/imagen/"  +  data['nombreBanner']
+            PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  data['nombreBanner']
             #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
 
             new_contest = Contest(
@@ -225,7 +225,7 @@ class FormsResource(Resource):
         else: 
             numberFile = numberFile+1
         f = request.files['file']
-        PATH_GUARDAR = "/home/n.rozo10/BackendProyecto1/files/"+  str(numberFile)   +  f.filename
+        PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/files/"+  str(numberFile)   +  f.filename
         #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/" +  str(numberFile)  +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
@@ -325,8 +325,8 @@ class GetContestImageResource(Resource):
     def get(self, contest_id):     
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
-            return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
-            #return send_from_directory("/home/n.rozo10/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
+            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
+            return send_from_directory("/home/ubuntu/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
         except FileNotFoundError:
             return(404)
 
@@ -335,7 +335,7 @@ class GetOriginalAudioResource(Resource):
         audio = Form.query.filter_by(id=form_id).first()
 
         try:
-            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", os.path.basename(audio.original), as_attachment=True)
+            return send_from_directory("/home/ubuntu/BackendProyecto1/files/", os.path.basename(audio.original), as_attachment=True)
         except FileNotFoundError:
             return(400)
 
@@ -343,7 +343,7 @@ class GetConvertedAudioResource(Resource):
     def get(self, form_id):
         audio = Form.query.filter_by(id=form_id).first()
         try:
-            return send_from_directory("/home/n.rozo10/BackendProyecto1/files/", os.path.basename(audio.formatted), as_attachment=True)
+            return send_from_directory("/home/ubuntu/BackendProyecto1/files/", os.path.basename(audio.formatted), as_attachment=True)
         except FileNotFoundError:
             return(400)
 
