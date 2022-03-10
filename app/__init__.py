@@ -125,50 +125,52 @@ class ContestsResource(Resource):
         contests = Contest.query.all()
         return contests_schema.dump(contests)
     def post(self):
+            try:
+                data = request.form
+                if not data['startDate']:
+                    return 'Fecha de inicio no puede estar vacía', 400
 
-            data = request.form
-            if not data['startDate']:
-                return 'Fecha de inicio no puede estar vacía', 400
+                if not data['endDate']:
+                    return 'Fecha de fin no puede estar vacía', 400
 
-            if not data['endDate']:
-                return 'Fecha de fin no puede estar vacía', 400
+                if not data['name']:
+                    return 'No se puede dejar el nombre del concurso vacío', 400
+                PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  data['nombreBanner']
+                #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
 
-            if not data['name']:
-                return 'No se puede dejar el nombre del concurso vacío', 400
-            PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  data['nombreBanner']
-            #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
+                new_contest = Contest(
+                    name = data['name'],
+                    banner = PATH_GUARDAR,
+                    url = data['name'],
+                    startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S'),
+                    endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S'),
+                    payment = data['payment'],
+                    script = data['script'],
+                    address = data['address'],
+                    notes = data['notes'],
+                    user_id = data['user_id']
 
-            new_contest = Contest(
-                name = data['name'],
-                banner = PATH_GUARDAR,
-                url = data['name'],
-                startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S'),
-                endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S'),
-                payment = data['payment'],
-                script = data['script'],
-                address = data['address'],
-                notes = data['notes'],
-                user_id = data['user_id']
-  
-            )
+                )
 
-            if new_contest.startDate > new_contest.endDate:
-                return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
+                if new_contest.startDate > new_contest.endDate:
+                    return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
 
-            test_list = User.query.all()
-            if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
-                return 'El ID del usuario utilizado para crear el concurso no existe', 400
+                test_list = User.query.all()
+                if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
+                    return 'El ID del usuario utilizado para crear el concurso no existe', 400
 
-            test_list = Contest.query.all()
-            if not next((x for x in test_list if str(x.url) == str(new_contest.url)), None) is None:
-                return 'El nombre del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otro nombre para crear su concurso.', 400
+                test_list = Contest.query.all()
+                if not next((x for x in test_list if str(x.url) == str(new_contest.url)), None) is None:
+                    return 'El nombre del concurso ya está siendo utilizado por otro administrador para su URL personalizada. Por favor use otro nombre para crear su concurso.', 400
 
-            db.session.add(new_contest)
-            
-            f = request.files['file']
-            f.save(PATH_GUARDAR)
-            new_contest.nombreBanner = f.filename
-            db.session.commit()
+                db.session.add(new_contest)
+                
+                f = request.files['file']
+                f.save(PATH_GUARDAR)
+                new_contest.nombreBanner = f.filename
+                db.session.commit()
+            except Exception as e:
+                return str(e), 400
             return contest_schema.dump(new_contest)
 
 class Form_Schema(ma.Schema):
