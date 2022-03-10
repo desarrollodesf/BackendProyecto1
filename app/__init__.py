@@ -66,10 +66,10 @@ class ContestResource(Resource):
         fecha_fin = contest.endDate
 
         if 'startDate' in data:
-            contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S')
+            contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
 
         if 'endDate' in data:
-            contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S')
+            contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
 
         if fecha_inicio > fecha_fin:
             return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
@@ -105,10 +105,13 @@ class ContestResource(Resource):
 
         if 'file' in request.files:
             f = request.files['file']
-            PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  f.filename
-            contest.nombreBanner = f.filename
-            contest.banner = PATH_GUARDAR
-            f.save(PATH_GUARDAR)
+            
+            if f.filename != "":
+                #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  f.filename
+                PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  f.filename
+                contest.nombreBanner = f.filename
+                contest.banner = PATH_GUARDAR
+                f.save(PATH_GUARDAR)
 
 
         db.session.commit()
@@ -200,10 +203,10 @@ class FormResource(Resource):
             form.formatted = request.json['formatted']
 
         if 'startConversion' in request.json:
-            form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')
+            form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S').isoformat()
 
         if 'finishConversion' in request.json:
-            form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S')     
+            form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S').isoformat()     
 
         db.session.commit()
         return form_schema.dump(form)
@@ -330,7 +333,7 @@ class GetContestImageResource(Resource):
     def get(self, contest_id):     
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
-            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", "a.pdf", as_attachment=True)
+            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
             return send_from_directory("/home/ubuntu/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
         except FileNotFoundError:
             return(404)
