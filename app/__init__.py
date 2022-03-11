@@ -100,7 +100,7 @@ class ContestResource(Resource):
             contest.user_id = data['user_id']
 
         test_list = User.query.all()
-        if next((x for x in test_list if str(x.id) == contest.user_id), None) is None:
+        if next((x for x in test_list if str(x.id) == str(contest.user_id)), None) is None:
             return 'El ID del usuario utilizado para crear el concurso no existe', 400 
 
         if 'file' in request.files:
