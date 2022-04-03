@@ -122,6 +122,14 @@ class ContestResource(Resource):
     def delete(self, contest_id):
 
         contest = Contest.query.get_or_404(contest_id)
+
+        forms = Form.query.filter_by(contest_id=contest_id)
+
+        for form in forms:    
+            formToDelte = Form.query.get_or_404(form.id)
+            db.session.delete(formToDelte)
+            db.session.commit()
+
         db.session.delete(contest)
         db.session.commit()
         return 'Contest deleted', 204
@@ -217,8 +225,8 @@ class FormResource(Resource):
 
     def delete(self, form_id):
 
-        contest = Form.query.get_or_404(form_id)
-        db.session.delete(contest)
+        form = Form.query.get_or_404(form_id)
+        db.session.delete(form)
         db.session.commit()
         return 'Form deleted', 204
 
