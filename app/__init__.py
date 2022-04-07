@@ -326,7 +326,11 @@ class FormsByContestResource(Resource):
 class PendingToConvertResource(Resource):
     def get(self):
         forms = Form.query.filter_by(state = "En proceso")
-        return forms_schema.dump(forms)
+        form = next(iter(forms), None)
+        if form is not None:
+            form.state = "Asignada"
+            db.session.commit()
+        return form_schema.dump(form)
 
 class Admin_Schema(ma.Schema):
     class Meta:
