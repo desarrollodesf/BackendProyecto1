@@ -1,5 +1,6 @@
 import os.path
 from queue import Empty
+from telnetlib import theNULL
 from flask import Flask, request, abort, jsonify, send_from_directory, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -23,25 +24,34 @@ migrate = Migrate(app, db)
 migrate.init_app(app, db)
 login = LoginManager(app)
 api = Api(app)
-#app.config['MAX_CONTENT_LENGTH'] = 102400
 ma = Marshmallow(app)
 bootstrap = Bootstrap(app)
 
 login = LoginManager(app)
 login.login_view = 'login'
 
-FILE_PATH = "/files/"
+global PATH_GUARDAR_GLOBAL
+#PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
+#PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/files/'
+PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/'
+
+global local_environment 
+local_environment = True
+
+global File_System #Si es Local = 'local' desarrolador, si es local linux = 'linux' si es S3 = 's3', si es  nfs = 'nfs' 
+File_System = 's3'
 
 from app.models import Contest, Form, User
 
-#db.create_all()
-#def setup_database(app):
-#    db.init_app(app)
-#    with app.app_context():
-#        db.create_all()
 
-#if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
- #   setup_database(app)
+def setup_database(app):
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
+if local_environment is True:
+    if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
+        setup_database(app)
 
 
 class Contest_Schema(ma.Schema):
@@ -66,10 +76,16 @@ class ContestResource(Resource):
         fecha_fin = contest.endDate
 
         if 'startDate' in data:
-            contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
+            if local_environment is True:
+                contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S')
+            else:
+                contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
 
         if 'endDate' in data:
-            contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
+            if local_environment is True:
+                contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S')
+            else:
+                contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S').isoformat()
 
         if fecha_inicio > fecha_fin:
             return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
@@ -107,9 +123,7 @@ class ContestResource(Resource):
             f = request.files['file']
             
             if f.filename != "":
-                #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  f.filename
-                #PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  f.filename
-                PATH_GUARDAR = "/var/locally-mounted/"  +  f.filename
+                PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
                 contest.nombreBanner = f.filename
                 contest.banner = PATH_GUARDAR
                 f.save(PATH_GUARDAR)
@@ -151,9 +165,7 @@ class ContestsResource(Resource):
                 if not data['name']:
                     return 'No se puede dejar el nombre del concurso vacío', 400
 
-                PATH_GUARDAR = "/var/locally-mounted/"  +  data['nombreBanner']
-                #PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/imagen/"  +  data['nombreBanner']
-                #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/" +  data['nombreBanner']
+                PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  data['nombreBanner']
 
                 new_contest = Contest(
                     name = data['name'],
@@ -168,6 +180,11 @@ class ContestsResource(Resource):
                     user_id = data['user_id']
 
                 )
+
+                if local_environment is True:
+                    new_contest.startDate = datetime.strptime(data['startDate'],'%Y-%m-%dT%H:%M:%S')
+                    new_contest.endDate = datetime.strptime(data['endDate'],'%Y-%m-%dT%H:%M:%S')
+
 
                 if new_contest.startDate > new_contest.endDate:
                     return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
@@ -214,10 +231,17 @@ class FormResource(Resource):
             form.formatted = request.json['formatted']
 
         if 'startConversion' in request.json:
-            form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S').isoformat()
+
+            if local_environment is True:
+                form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S')
+            else:
+                form.startConversion = datetime.strptime(request.json['startConversion'],'%Y-%m-%d %H:%M:%S').isoformat()
 
         if 'finishConversion' in request.json:
-            form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S').isoformat()     
+            if local_environment is True:
+                form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S')
+            else:
+                form.finishConversion = datetime.strptime(request.json['finishConversion'],'%Y-%m-%d %H:%M:%S').isoformat()     
 
         db.session.commit()
         return form_schema.dump(form)
@@ -245,9 +269,7 @@ class FormsResource(Resource):
             numberFile = numberFile+1
         f = request.files['file']
 
-        PATH_GUARDAR = "/var/locally-mounted/"+  str(numberFile)   +  f.filename
-        #PATH_GUARDAR = "/home/ubuntu/BackendProyecto1/files/"+  str(numberFile)   +  f.filename
-        #PATH_GUARDAR = "D:/Nirobe/202120-Grupo07/BackendProyecto1/files/" +  str(numberFile)  +  f.filename
+        PATH_GUARDAR = PATH_GUARDAR_GLOBAL +  str(numberFile)   +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
         if forms is not None:
@@ -266,7 +288,11 @@ class FormsResource(Resource):
             contest_id = data['contest_id'],     
             guid = uuid.uuid4().hex,
         )
-    
+
+        if local_environment is True:
+            new_form.uploadDate = datetime.strptime(datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone("America/New_York")).strftime('%Y-%m-%dT%H:%M:%S'),'%Y-%m-%dT%H:%M:%S')
+
+
         test_list = Contest.query.all()
         if next((x for x in test_list if str(x.id) == str(new_form.contest_id)), None) is None:
             return 'El ID del concurso utilizado para enviar un formulario no existe', 400
@@ -350,9 +376,11 @@ class GetContestImageResource(Resource):
     def get(self, contest_id):     
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
-            #return send_from_directory("D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
-           return send_from_directory("/var/locally-mounted/", contest.nombreBanner, as_attachment=True)
-           #return send_from_directory("/home/ubuntu/BackendProyecto1/imagen/", contest.nombreBanner, as_attachment=True)
+            if File_System == 's3':
+                print("")
+            else :
+                return send_from_directory(PATH_GUARDAR_GLOBAL, contest.nombreBanner, as_attachment=True)
+
         except FileNotFoundError:
             return(404)
 
@@ -361,17 +389,24 @@ class GetOriginalAudioResource(Resource):
         audio = Form.query.filter_by(id=form_id).first()
 
         try:
-            return send_from_directory("/var/locally-mounted/", os.path.basename(audio.original), as_attachment=True)
-            #return send_from_directory("/home/ubuntu/BackendProyecto1/files/", os.path.basename(audio.original), as_attachment=True)
+            if File_System == 's3':
+                print("")
+            else :
+                return send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.original), as_attachment=True)
+
         except FileNotFoundError:
             return(400)
 
 class GetConvertedAudioResource(Resource):
     def get(self, form_id):
         audio = Form.query.filter_by(id=form_id).first()
+
         try:
-            return send_from_directory("/var/locally-mounted/", os.path.basename(audio.formatted), as_attachment=True)
-            #return send_from_directory("/home/ubuntu/BackendProyecto1/files/", os.path.basename(audio.formatted), as_attachment=True)
+            if File_System == 's3':
+                print("")
+            else :
+                send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.formatted), as_attachment=True)
+
         except FileNotFoundError:
             return(400)
 
