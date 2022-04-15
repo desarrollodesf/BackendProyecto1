@@ -1,7 +1,8 @@
 import os.path
+
 from queue import Empty
 from telnetlib import theNULL
-from flask import Flask, request, abort, jsonify, send_from_directory, flash
+from flask import Flask, request, abort, jsonify, send_from_directory, flash,send_file,after_this_request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -15,6 +16,9 @@ from flask_cors import CORS
 import pytz
 from tzlocal import get_localzone
 import uuid
+import boto3
+import io
+import mimetypes
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -33,13 +37,20 @@ login.login_view = 'login'
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
 #PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/files/'
-PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/imagen/'
+PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
-global local_environment 
+global local_environment #bd de datos
 local_environment = True
 
 global File_System #Si es Local = 'local' desarrolador, si es local linux = 'linux' si es S3 = 's3', si es  nfs = 'nfs' 
 File_System = 's3'
+
+global UPLOAD_FOLDER 
+UPLOAD_FOLDER = "uploads"
+
+global S3_BUCKET 
+S3_BUCKET = "grupo13s3"
+
 
 from app.models import Contest, Form, User
 
@@ -123,10 +134,20 @@ class ContestResource(Resource):
             f = request.files['file']
             
             if f.filename != "":
+
+                if File_System == 's3':
+                    client = boto3.client('s3')
+                    client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
+
                 PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
                 contest.nombreBanner = f.filename
                 contest.banner = PATH_GUARDAR
                 f.save(PATH_GUARDAR)
+
+                
+                if File_System == 's3':
+                    response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
+                    os.remove(os.path.join(UPLOAD_FOLDER, f.filename))
 
 
         db.session.commit()
@@ -140,10 +161,17 @@ class ContestResource(Resource):
         forms = Form.query.filter_by(contest_id=contest_id)
 
         for form in forms:    
-            formToDelte = Form.query.get_or_404(form.id)
-            db.session.delete(formToDelte)
-            db.session.commit()
+            formToDelete = Form.query.get_or_404(form.id)
+            
+            db.session.delete(formToDelete)
+            
 
+        try:
+            client = boto3.client('s3')
+            response = client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
+        except Exception as e:
+                print(str(e))
+                
         db.session.delete(contest)
         db.session.commit()
         return 'Contest deleted', 204
@@ -165,7 +193,10 @@ class ContestsResource(Resource):
                 if not data['name']:
                     return 'No se puede dejar el nombre del concurso vacío', 400
 
-                PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  data['nombreBanner']
+                if File_System == 's3':
+                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL + "uploads/" +  data['nombreBanner']
+                else:
+                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  data['nombreBanner']
 
                 new_contest = Contest(
                     name = data['name'],
@@ -202,7 +233,12 @@ class ContestsResource(Resource):
                 f = request.files['file']
                 f.save(PATH_GUARDAR)
                 new_contest.nombreBanner = f.filename
+
+                if File_System == 's3':
+                    response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
+                    os.remove(PATH_GUARDAR)
                 db.session.commit()
+
             except Exception as e:
                 return str(e), 400
             return contest_schema.dump(new_contest)
@@ -269,7 +305,10 @@ class FormsResource(Resource):
             numberFile = numberFile+1
         f = request.files['file']
 
-        PATH_GUARDAR = PATH_GUARDAR_GLOBAL +  str(numberFile)   +  f.filename
+        if File_System == 's3':
+            PATH_GUARDAR = PATH_GUARDAR_GLOBAL + "uploads/" +  str(numberFile) +  f.filename
+        else:
+            PATH_GUARDAR = PATH_GUARDAR_GLOBAL +  str(numberFile)   +  f.filename
 
         forms = Form.query.filter_by(original=PATH_GUARDAR).first()
         if forms is not None:
@@ -298,6 +337,10 @@ class FormsResource(Resource):
             return 'El ID del concurso utilizado para enviar un formulario no existe', 400
 
         f.save(PATH_GUARDAR)
+
+        if File_System == 's3':
+            response = upload_file(f"uploads/{str(numberFile)+f.filename}", S3_BUCKET)
+            os.remove(PATH_GUARDAR)
 
         db.session.add(new_form)
         db.session.commit()
@@ -377,7 +420,9 @@ class GetContestImageResource(Resource):
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
             if File_System == 's3':
-                print("")
+                file_path = download_file(f"uploads/{contest.nombreBanner}", S3_BUCKET)
+                return send_file(file_path, as_attachment=True)
+                
             else :
                 return send_from_directory(PATH_GUARDAR_GLOBAL, contest.nombreBanner, as_attachment=True)
 
@@ -390,7 +435,9 @@ class GetOriginalAudioResource(Resource):
 
         try:
             if File_System == 's3':
-                print("")
+                name = "uploads/" + os.path.basename(audio.original)
+                output = download_file(name, S3_BUCKET)
+                return send_file(output, as_attachment=True)
             else :
                 return send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.original), as_attachment=True)
 
@@ -403,7 +450,9 @@ class GetConvertedAudioResource(Resource):
 
         try:
             if File_System == 's3':
-                print("")
+                name = "uploads/" + os.path.basename(audio.original)
+                output = download_file(name, S3_BUCKET)
+                return send_file(output, as_attachment=True)
             else :
                 send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.formatted), as_attachment=True)
 
@@ -411,7 +460,27 @@ class GetConvertedAudioResource(Resource):
             return(400)
 
 
+def upload_file(file_name, bucket):
+    """
+    Function to upload a file to an S3 bucket
+    """
+    object_name = file_name
+    s3_client = boto3.client('s3')
+    response = s3_client.upload_file(file_name, bucket, object_name)
 
+    return response
+
+def download_file(file_name, bucket):
+    """
+    Function to download a given file from an S3 bucket
+    """
+    pathdownload = os.path.join(PATH_GUARDAR_GLOBAL, file_name)
+
+    s3 = boto3.client('s3')
+    s3.download_file(bucket, file_name, pathdownload)
+
+    return pathdownload
+    
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
 api.add_resource(FormResource,'/api/form/<int:form_id>')
@@ -425,3 +494,4 @@ api.add_resource(LoginResource,'/api/login/')
 api.add_resource(GetContestImageResource,'/api/contest/<int:contest_id>/image')
 api.add_resource(GetOriginalAudioResource,'/api/form/<int:form_id>/original')
 api.add_resource(GetConvertedAudioResource,'/api/form/<int:form_id>/convertido')
+
