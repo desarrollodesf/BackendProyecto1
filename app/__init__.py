@@ -19,6 +19,7 @@ import uuid
 import boto3
 import io
 import mimetypes
+import json
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -36,11 +37,11 @@ login.login_view = 'login'
 
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
-#PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/files/'
-PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
+PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
+#PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
 global local_environment #bd de datos
-local_environment = True
+local_environment = False
 
 global File_System #Si es Local = 'local' desarrolador, si es local linux = 'linux' si es S3 = 's3', si es  nfs = 'nfs' 
 File_System = 's3'
@@ -339,8 +340,10 @@ class FormsResource(Resource):
         f.save(PATH_GUARDAR)
 
         if File_System == 's3':
-            response = upload_file(f"uploads/{str(numberFile)+f.filename}", S3_BUCKET)
+            nombreArchivo = f"uploads/{str(numberFile)+f.filename}"
+            response = upload_file(nombreArchivo, S3_BUCKET)
             os.remove(PATH_GUARDAR)
+            sendMessageQueue(nombreArchivo)
 
         db.session.add(new_form)
         db.session.commit()
@@ -480,6 +483,19 @@ def download_file(file_name, bucket):
     s3.download_file(bucket, file_name, pathdownload)
 
     return pathdownload
+
+
+def sendMessageQueue(nombreArchivo):
+    # Create SQS client
+    sqs = boto3.client('sqs', region_name = 'us-east-1')
+
+    message = {"key": nombreArchivo}
+    response = sqs.send_message(
+        QueueUrl="https://sqs.us-east-1.amazonaws.com/146202439559/MyQueue",
+        MessageBody=json.dumps(message)
+    )
+    print(response)
+
     
 api.add_resource(UserResource,'/api/administrador/')   
 api.add_resource(FormsResource,'/api/forms/')
