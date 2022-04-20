@@ -36,11 +36,11 @@ login.login_view = 'login'
 
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
-#PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
-PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
+PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
+#PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
 global local_environment #bd de datos
-local_environment = True
+local_environment = False
 
 global File_System #Si es Local = 'local' desarrolador, si es local linux = 'linux' si es S3 = 's3', si es  nfs = 'nfs' 
 File_System = 's3'
@@ -139,7 +139,10 @@ class ContestResource(Resource):
                     client = boto3.client('s3')
                     client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
 
+                
                 PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
+                if File_System == 's3':
+                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f"uploads/{f.filename}"
                 contest.nombreBanner = f.filename
                 contest.banner = PATH_GUARDAR
                 f.save(PATH_GUARDAR)
