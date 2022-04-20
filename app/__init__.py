@@ -36,11 +36,11 @@ login.login_view = 'login'
 
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
-PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
-#PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
+#PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
+PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
 global local_environment #bd de datos
-local_environment = False
+local_environment = True
 
 global File_System #Si es Local = 'local' desarrolador, si es local linux = 'linux' si es S3 = 's3', si es  nfs = 'nfs' 
 File_System = 's3'
@@ -146,6 +146,7 @@ class ContestResource(Resource):
 
                 
                 if File_System == 's3':
+                    contest.nombreBanner = f"uploads/{f.filename}"
                     response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
                     os.remove(os.path.join(UPLOAD_FOLDER, f.filename))
 
@@ -235,6 +236,7 @@ class ContestsResource(Resource):
                 new_contest.nombreBanner = f.filename
 
                 if File_System == 's3':
+                    new_contest.nombreBanner = f"uploads/{f.filename}"
                     response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
@@ -425,7 +427,7 @@ class GetContestImageResource(Resource):
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
             if File_System == 's3':
-                file_path = download_file(f"uploads/{contest.nombreBanner}", S3_BUCKET)
+                file_path = download_file(contest.nombreBanner, S3_BUCKET)
                 return send_file(file_path, as_attachment=True)
                 
             else :
@@ -442,7 +444,7 @@ class GetOriginalAudioResource(Resource):
             if File_System == 's3':
                 name = "uploads/" + os.path.basename(audio.original)
                 output = download_file(name, S3_BUCKET)
-                return send_file(output, as_attachment=True)
+                return send_from_directory(PATH_GUARDAR_GLOBAL, name, as_attachment=True)
             else :
                 return send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.original), as_attachment=True)
 
@@ -457,7 +459,7 @@ class GetConvertedAudioResource(Resource):
             if File_System == 's3':
                 name = "uploads/" + os.path.basename(audio.formatted)
                 output = download_file(name, S3_BUCKET)
-                return send_file(output, as_attachment=True)
+                return send_from_directory(PATH_GUARDAR_GLOBAL, name, as_attachment=True)
             else :
                 send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.formatted), as_attachment=True)
 
