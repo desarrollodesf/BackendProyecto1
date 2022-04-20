@@ -2,6 +2,7 @@ import os.path
 
 from queue import Empty
 from telnetlib import theNULL
+from tkinter import E
 from flask import Flask, request, abort, jsonify, send_from_directory, flash,send_file,after_this_request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -343,10 +344,13 @@ class FormsResource(Resource):
             nombreArchivo = f"uploads/{str(numberFile)+f.filename}"
             response = upload_file(nombreArchivo, S3_BUCKET)
             os.remove(PATH_GUARDAR)
-            sendMessageQueue(nombreArchivo)
+            
 
         db.session.add(new_form)
         db.session.commit()
+
+        if File_System == 's3':
+            sendMessageQueue(nombreArchivo, new_form.id, new_form.email, new_form.name)
         return form_schema.dump(new_form)
 
     def delete(self):
@@ -453,7 +457,7 @@ class GetConvertedAudioResource(Resource):
 
         try:
             if File_System == 's3':
-                name = "uploads/" + os.path.basename(audio.original)
+                name = "uploads/" + os.path.basename(audio.formatted)
                 output = download_file(name, S3_BUCKET)
                 return send_file(output, as_attachment=True)
             else :
@@ -485,11 +489,11 @@ def download_file(file_name, bucket):
     return pathdownload
 
 
-def sendMessageQueue(nombreArchivo):
+def sendMessageQueue(nombreArchivo, idForm, email, name ):
     # Create SQS client
     sqs = boto3.client('sqs', region_name = 'us-east-1')
 
-    message = {"key": nombreArchivo}
+    message = {"key": nombreArchivo, "id": idForm, "email": email , "name": name}
     response = sqs.send_message(
         QueueUrl="https://sqs.us-east-1.amazonaws.com/146202439559/MyQueue",
         MessageBody=json.dumps(message)
