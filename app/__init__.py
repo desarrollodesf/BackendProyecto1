@@ -19,6 +19,7 @@ import boto3
 import io
 import mimetypes
 import json
+import redis
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -33,6 +34,7 @@ bootstrap = Bootstrap(app)
 
 login = LoginManager(app)
 login.login_view = 'login'
+
 
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
@@ -61,6 +63,8 @@ def setup_database(app):
         db.create_all()
 
 if local_environment is True:
+    r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
+    r.set('foo','bar')
     if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
         setup_database(app)
 
