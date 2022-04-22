@@ -249,7 +249,8 @@ class ContestsResource(Resource):
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
                 dictionary = new_contest.as_dict()
-                s = json.dumps(dictionary)
+                print(dictionary)
+                s = json.dumps(dictionary, default=str)
                 print(s)
                 print(r.set(new_contest.id),s)  
             except Exception as e:
