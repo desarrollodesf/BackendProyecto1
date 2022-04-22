@@ -93,7 +93,7 @@ class ContestResource(Resource):
             print(plain)
             s = json.loads(plain, default=str)
             print(s)
-            contest = User(**s)
+            contest = Contest(**s)
         except Exception as e:
             return str(e), 400
         #return contest_schema.dump(new_contest)
