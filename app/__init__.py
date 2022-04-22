@@ -252,7 +252,7 @@ class ContestsResource(Resource):
                 print(dictionary)
                 s = json.dumps(dictionary, default=str)
                 print(s)
-                print(r.set(new_contest.id),s)  
+                print(r.set(new_contest.id,s))  
             except Exception as e:
                 return str(e), 400
 
