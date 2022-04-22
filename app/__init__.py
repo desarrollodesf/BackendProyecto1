@@ -67,7 +67,7 @@ if local_environment is True:
         setup_database(app)
 else:
     r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
-    print(r.get('foo','bar'))
+    print(r.get('foo'))
 
 
 class Contest_Schema(ma.Schema):
