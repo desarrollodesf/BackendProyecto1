@@ -67,7 +67,7 @@ if local_environment is True:
         setup_database(app)
 else:
     r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
-    print(r.get('foo'))
+    #print(r.get('foo'))
 
 
 class Contest_Schema(ma.Schema):
@@ -140,9 +140,9 @@ class ContestResource(Resource):
             
             if f.filename != "":
 
-                if File_System == 's3':
-                    client = boto3.client('s3')
-                    client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
+                #if File_System == 's3':
+                #    client = boto3.client('s3')
+                #    client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
 
                 
                 PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
@@ -175,11 +175,11 @@ class ContestResource(Resource):
             db.session.delete(formToDelete)
             
 
-        try:
-            client = boto3.client('s3')
-            response = client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
-        except Exception as e:
-                print(str(e))
+        #try:
+        #    client = boto3.client('s3')
+        #    response = client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
+        #except Exception as e:
+         #       print(str(e))
                 
         db.session.delete(contest)
         db.session.commit()
@@ -248,9 +248,10 @@ class ContestsResource(Resource):
                     response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
-
             except Exception as e:
                 return str(e), 400
+
+            print(r.set(new_contest.id),contest_schema.dump(new_contest))    
             return contest_schema.dump(new_contest)
 
 class Form_Schema(ma.Schema):
