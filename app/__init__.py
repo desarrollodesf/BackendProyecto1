@@ -88,10 +88,13 @@ class ContestResource(Resource):
         #s = json.dumps(dictionary, default=str)
         #print(s)
         #r.set(new_contest.id,s)  
-
-        plain = r.get(contest_id)  
-        s = json.loads(plain, default=str)
-        contest = User(**s)
+        try:
+            plain = r.get(contest_id)  
+            s = json.loads(plain, default=str)
+            contest = User(**s)
+        except Exception as e:
+            return str(e), 400
+        #return contest_schema.dump(new_contest)
         return contest_schema.dump(contest)
 
 
