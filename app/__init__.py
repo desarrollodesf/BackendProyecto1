@@ -90,7 +90,9 @@ class ContestResource(Resource):
         #r.set(new_contest.id,s)  
         try:
             plain = r.get(contest_id)  
+            print(plain)
             s = json.loads(plain, default=str)
+            print(s)
             contest = User(**s)
         except Exception as e:
             return str(e), 400
