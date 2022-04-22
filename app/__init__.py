@@ -67,8 +67,6 @@ if local_environment is True:
         setup_database(app)
 else:
     r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
-    #print(r.get('foo'))
-
 
 class Contest_Schema(ma.Schema):
     class Meta:
@@ -80,23 +78,26 @@ contests_schema = Contest_Schema(many = True)
 class ContestResource(Resource):
 
     def get(self, contest_id):
-        #contest = Contest.query.get_or_404(contest_id)
-        #return contest_schema.dump(contest)
-
-        #dictionary = new_contest.as_dict()
-        #print(dictionary)
-        #s = json.dumps(dictionary, default=str)
-        #print(s)
-        #r.set(new_contest.id,s)  
+        contest = ""
         try:
             plain = r.get(contest_id)  
             print(plain)
             s = json.loads(plain, default=str)
-            print(s)
-            contest = Contest(**s)
+
+            contest = Contest(
+                name = s['name'],
+                banner = s['banner'],
+                url = s['url'],
+                startDate = datetime.strptime(s['startDate'],'%Y-%m-%dT%H:%M:%S').isoformat(),
+                endDate = datetime.strptime(s['endDate'],'%Y-%m-%dT%H:%M:%S').isoformat(),
+                payment = s['payment'],
+                script = s['script'],
+                address = s['address'],
+                notes = s['notes'],
+                user_id = s['user_id']
+            )
         except Exception as e:
             return str(e), 400
-        #return contest_schema.dump(new_contest)
         return contest_schema.dump(contest)
 
 
@@ -156,12 +157,7 @@ class ContestResource(Resource):
             f = request.files['file']
             
             if f.filename != "":
-
-                #if File_System == 's3':
-                #    client = boto3.client('s3')
-                #    client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
-
-                
+   
                 PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
                 if File_System == 's3':
                     PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f"uploads/{f.filename}"
@@ -190,13 +186,6 @@ class ContestResource(Resource):
             formToDelete = Form.query.get_or_404(form.id)
             
             db.session.delete(formToDelete)
-            
-
-        #try:
-        #    client = boto3.client('s3')
-        #    response = client.delete_object(Bucket=S3_BUCKET, Key=contest.nombreBanner)
-        #except Exception as e:
-         #       print(str(e))
                 
         db.session.delete(contest)
         db.session.commit()
@@ -266,10 +255,8 @@ class ContestsResource(Resource):
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
                 dictionary = new_contest.as_dict()
-                print(dictionary)
                 s = json.dumps(dictionary, default=str)
-                print(s)
-                print(r.set(new_contest.id,s))  
+                r.set(new_contest.id,s)
             except Exception as e:
                 return str(e), 400
 
