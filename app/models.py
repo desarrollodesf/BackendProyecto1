@@ -38,8 +38,11 @@ class Contest(db.Model):
     notes = db.Column(db.String(160))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self):
-        return '<Contest {}>'.format(self.body)
+            return '<Contest {}>'.format(self.body)
 
 
 class Form(db.Model):

@@ -248,10 +248,10 @@ class ContestsResource(Resource):
                     response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
-                jsonObject = json.dumps(jsonify(contest_schema.dump(new_contest)))
-                print(jsonObject)
-                print(json.dumps(jsonObject))
-                print(r.set(new_contest.id),json.dumps(jsonObject))  
+                dictionary = new_contest.as_dict()
+                s = json.dumps(dictionary)
+                print(s)
+                print(r.set(new_contest.id),s)  
             except Exception as e:
                 return str(e), 400
 
