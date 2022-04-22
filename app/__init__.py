@@ -80,8 +80,20 @@ contests_schema = Contest_Schema(many = True)
 class ContestResource(Resource):
 
     def get(self, contest_id):
-        contest = Contest.query.get_or_404(contest_id)
+        #contest = Contest.query.get_or_404(contest_id)
+        #return contest_schema.dump(contest)
+
+        #dictionary = new_contest.as_dict()
+        #print(dictionary)
+        #s = json.dumps(dictionary, default=str)
+        #print(s)
+        #r.set(new_contest.id,s)  
+
+        plain = r.get(contest_id)  
+        s = json.loads(plain, default=str)
+        contest = User(**s)
         return contest_schema.dump(contest)
+
 
     def put(self, contest_id):
 
