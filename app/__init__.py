@@ -82,8 +82,8 @@ class ContestResource(Resource):
         try:
             plain = r.get(contest_id)  
             print(plain)
-            s = json.loads(plain, default=str)
-
+            s = json.loads(plain)
+            print(s)
             contest = Contest(
                 name = s['name'],
                 banner = s['banner'],
