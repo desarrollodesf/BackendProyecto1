@@ -63,10 +63,11 @@ def setup_database(app):
         db.create_all()
 
 if local_environment is True:
-    r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
-    print(r.set('foo','bar'))
     if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
         setup_database(app)
+else:
+    r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
+    print(r.set('foo','bar'))
 
 
 class Contest_Schema(ma.Schema):
