@@ -20,6 +20,7 @@ import io
 import mimetypes
 import json
 import redis
+import urllib.request
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -448,8 +449,10 @@ class GetContestImageResource(Resource):
         contest = Contest.query.filter_by(id=contest_id).first()
         try:
             if File_System == 's3':
-                file_path = download_file(contest.nombreBanner, S3_BUCKET)
-                return send_file(file_path, as_attachment=True)
+                #file_path = download_file(contest.nombreBanner, S3_BUCKET)
+                filePath = PATH_GUARDAR_GLOBAL + "/" + contest.nombreBanner
+                upload_file_cloudfront(contest.nombreBanner)
+                return send_file(filePath, as_attachment=True)
                 
             else :
                 return send_from_directory(PATH_GUARDAR_GLOBAL, contest.nombreBanner, as_attachment=True)
@@ -464,7 +467,9 @@ class GetOriginalAudioResource(Resource):
         try:
             if File_System == 's3':
                 name = "uploads/" + os.path.basename(audio.original)
-                output = download_file(name, S3_BUCKET)
+                upload_file_cloudfront(name)
+                #output = download_file(name, S3_BUCKET)
+                
                 return send_from_directory(PATH_GUARDAR_GLOBAL, name, as_attachment=True)
             else :
                 return send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.original), as_attachment=True)
@@ -479,13 +484,19 @@ class GetConvertedAudioResource(Resource):
         try:
             if File_System == 's3':
                 name = "uploads/" + os.path.basename(audio.formatted)
-                output = download_file(name, S3_BUCKET)
+                upload_file_cloudfront(name)
+                #output = download_file(name, S3_BUCKET)
                 return send_from_directory(PATH_GUARDAR_GLOBAL, name, as_attachment=True)
             else :
                 send_from_directory(PATH_GUARDAR_GLOBAL, os.path.basename(audio.formatted), as_attachment=True)
 
         except FileNotFoundError:
             return(400)
+
+
+def upload_file_cloudfront(file_name):
+
+    urllib.request.urlretrieve("https://d3ruftgzgpixxi.cloudfront.net/"+file_name, file_name)
 
 
 def upload_file(file_name, bucket):
