@@ -187,6 +187,7 @@ class ContestResource(Resource):
                 formToDelete = Form.query.get_or_404(form.id)
                 
                 db.session.delete(formToDelete)
+                db.session.commit()
                     
             db.session.delete(contest)
             db.session.commit()
