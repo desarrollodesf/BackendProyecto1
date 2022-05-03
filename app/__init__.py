@@ -21,6 +21,7 @@ import mimetypes
 import json
 import redis
 import urllib.request
+from boto3.dynamodb.conditions import Key, Attr
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -65,6 +66,7 @@ from app.models import Contest, Form, User
 
 
 def setup_database(app):
+    db.drop_all()
     db.init_app(app)
     with app.app_context():
         db.create_all()
@@ -74,6 +76,7 @@ if local_environment is True:
         setup_database(app)
 else:
     r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
+    dynamo_client = boto3.resource('dynamodb', region_name = 'us-east-1')
 
 class Contest_Schema(ma.Schema):
     class Meta:
@@ -393,15 +396,45 @@ class UserResource(Resource):
         email = request.json['email']
         password = request.json['password']
 
-        user = User.query.filter_by(email=email).first()
-        if user is not None:
-            return 'Usuario ya existe', 400
+        #user = User.query.filter_by(email=email).first()
+        #if user is not None:
+        #    return 'Usuario ya existe', 400
 
-        user_data = User(name=name, lastname=lastname,email=email )
-        user_data.set_password(password)
-        db.session.add(user_data)
-        db.session.commit()
-        return 'Usuario creado', 204
+        #user_data = User(name=name, lastname=lastname,email=email )
+        #user_data.set_password(password)
+        #db.session.add(user_data)
+        #db.session.commit()
+
+
+        dynamoUser = dynamo_client.Table('usuarios')
+        try:
+            response = dynamoUser.get_item(
+                Key={'correo': request.json["email"]})
+        except Exception as e:
+            return 400
+
+        else:   
+            if len(response) == 1:
+                scan = dynamoUser.scan()
+                contador = 0
+                if len(scan['Items']) == 0:
+                    contador = contador + 1
+                else:
+                    contador = len(scan['Items']) + 1
+
+                response = dynamoUser.put_item(
+                    # Data to be inserted
+                    Item={
+                        'correo': email,
+                        'name': name,
+                        'lastname': lastname,
+                        'password': password,
+                        'id' : contador
+                    }
+                )
+
+            else:
+                return 'Usuario creado', 204
 
 class ContestsByUserResource(Resource):
     
@@ -444,10 +477,29 @@ admin_schema = Admin_Schema()
 
 class LoginResource(Resource):
     def post(self):
-        user = User.query.filter_by(email=request.json["email"]).first()
-        if user is None or not user.check_password(request.json["password"]):
+        #user = User.query.filter_by(email=request.json["email"]).first()
+        #if user is None or not user.check_password(request.json["password"]):
+        #    return 'Invalid username or password', 400
+
+
+        dynamoUser = dynamo_client.Table('usuarios')
+        try:
+            response = dynamoUser.get_item(
+                Key={'correo': request.json["email"]})
+        except Exception as e:
             return 'Invalid username or password', 400
-        return admin_schema.dump(user)
+        else:
+            if len(response) == 1:
+                return 'Invalid username or password', 400
+
+            else:
+                item = response['Item']
+                name = item['name']
+                lastname = item['lastname']
+                email = item['correo']
+                id = int(item['id'])
+                user_data = User(name=name, lastname=lastname,email=email, id = id)
+                return admin_schema.dump(user_data)
 
 
 class GetContestImageResource(Resource):

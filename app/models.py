@@ -9,7 +9,7 @@ class User(UserMixin, db.Model):
     lastname = db.Column(db.String(160), index=True)
     email = db.Column(db.String(160), index=True, unique=True)
     password_hash = db.Column(db.String(160))
-    posts = db.relationship('Contest', backref='User', lazy='dynamic')
+    #posts = db.relationship('Contest', backref='User', lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.email)
@@ -36,7 +36,7 @@ class Contest(db.Model):
     script = db.Column(db.String(160))
     address = db.Column(db.String(160))
     notes = db.Column(db.String(160))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
