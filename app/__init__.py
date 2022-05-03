@@ -51,6 +51,12 @@ File_System = 's3'
 global UPLOAD_FOLDER 
 UPLOAD_FOLDER = "uploads"
 
+global PHOTO_FOLDER 
+PHOTO_FOLDER = "photos"
+
+global CONVERTED_FOLDER 
+CONVERTED_FOLDER = "converted"
+
 global S3_BUCKET 
 S3_BUCKET = "grupo13s3"
 
@@ -161,16 +167,16 @@ class ContestResource(Resource):
    
                 PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f.filename
                 if File_System == 's3':
-                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f"uploads/{f.filename}"
+                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  f"photos/{f.filename}"
                 contest.nombreBanner = f.filename
                 contest.banner = PATH_GUARDAR
                 f.save(PATH_GUARDAR)
 
                 
                 if File_System == 's3':
-                    contest.nombreBanner = f"uploads/{f.filename}"
-                    response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
-                    os.remove(os.path.join(UPLOAD_FOLDER, f.filename))
+                    contest.nombreBanner = f"photos/{f.filename}"
+                    response = upload_file(f"photos/{f.filename}", S3_BUCKET)
+                    os.remove(os.path.join(PHOTO_FOLDER, f.filename))
 
 
         db.session.commit()
@@ -214,7 +220,7 @@ class ContestsResource(Resource):
                     return 'No se puede dejar el nombre del concurso vacío', 400
 
                 if File_System == 's3':
-                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL + "uploads/" +  data['nombreBanner']
+                    PATH_GUARDAR = PATH_GUARDAR_GLOBAL + "photos/" +  data['nombreBanner']
                 else:
                     PATH_GUARDAR = PATH_GUARDAR_GLOBAL  +  data['nombreBanner']
 
@@ -255,8 +261,8 @@ class ContestsResource(Resource):
                 new_contest.nombreBanner = f.filename
 
                 if File_System == 's3':
-                    new_contest.nombreBanner = f"uploads/{f.filename}"
-                    response = upload_file(f"uploads/{f.filename}", S3_BUCKET)
+                    new_contest.nombreBanner = f"photos/{f.filename}"
+                    response = upload_file(f"photos/{f.filename}", S3_BUCKET)
                     os.remove(PATH_GUARDAR)
                 db.session.commit()
                 dictionary = new_contest.as_dict()
@@ -483,7 +489,7 @@ class GetConvertedAudioResource(Resource):
 
         try:
             if File_System == 's3':
-                name = "uploads/" + os.path.basename(audio.formatted)
+                name = "converted/" + os.path.basename(audio.formatted)
                 upload_file_cloudfront(name)
                 #output = download_file(name, S3_BUCKET)
                 return send_from_directory(PATH_GUARDAR_GLOBAL, name, as_attachment=True)
