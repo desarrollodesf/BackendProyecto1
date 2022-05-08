@@ -92,7 +92,7 @@ if local_environment is True:
     if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
         setup_database(app)
 else:
-    r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
+    r = redis.StrictRedis(host='redis://redistogo:3db655910a128facdf555b3ab7a052cf@barb.redistogo.com', port=10299, db=0, socket_timeout=1)
     session = boto3.Session(     
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
