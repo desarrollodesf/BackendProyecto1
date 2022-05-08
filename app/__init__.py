@@ -40,8 +40,8 @@ login.login_view = 'login'
 
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
-PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
-#PATH_GUARDAR_GLOBAL = '/app/'
+#PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
+PATH_GUARDAR_GLOBAL = '/app/'
 #PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
 global local_environment #bd de datos
