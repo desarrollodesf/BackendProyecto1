@@ -411,7 +411,7 @@ class UserResource(Resource):
             response = dynamoUser.get_item(
                 Key={'correo': request.json["email"]})
         except Exception as e:
-            return 400
+            return e, 400
 
         else:   
             if len(response) == 1:
@@ -432,9 +432,9 @@ class UserResource(Resource):
                         'id' : contador
                     }
                 )
-
+                return 'Usuario creado', 204 
             else:
-                return 'Usuario creado', 204
+                return 'Usuario ya existe', 400 
 
 class ContestsByUserResource(Resource):
     
