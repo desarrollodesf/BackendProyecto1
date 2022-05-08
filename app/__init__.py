@@ -411,7 +411,7 @@ class UserResource(Resource):
             response = dynamoUser.get_item(
                 Key={'correo': request.json["email"]})
         except Exception as e:
-            return e, 400
+            return str(e), 400
 
         else:   
             if len(response) == 1:
