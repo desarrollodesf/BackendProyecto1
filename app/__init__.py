@@ -41,6 +41,7 @@ login.login_view = 'login'
 global PATH_GUARDAR_GLOBAL
 #PATH_GUARDAR_GLOBAL = '/var/locally-mounted/'
 PATH_GUARDAR_GLOBAL = '/home/ubuntu/BackendProyecto1/'
+#PATH_GUARDAR_GLOBAL = '/app/'
 #PATH_GUARDAR_GLOBAL = 'D:/Nirobe/202120-Grupo07/BackendProyecto1/'
 
 global local_environment #bd de datos
@@ -71,6 +72,22 @@ def setup_database(app):
     with app.app_context():
         db.create_all()
 
+
+path="uploads"
+isExist = os.path.exists(path)
+if not isExist:
+    os.makedirs(path)
+
+path="converted"
+isExist = os.path.exists(path)
+if not isExist:
+    os.makedirs(path)
+
+path="photos"
+isExist = os.path.exists(path)
+if not isExist:
+    os.makedirs(path)
+
 if local_environment is True:
     if not os.path.isfile(app.config['SQLALCHEMY_DATABASE_URI']):
         setup_database(app)
@@ -83,7 +100,6 @@ else:
     region_name = 'us-east-1')
 
     dynamo_client = session.resource('dynamodb')
-    #dynamo_client = session.resource('dynamodb', region_name = 'us-east-1')
 
 class Contest_Schema(ma.Schema):
     class Meta:
