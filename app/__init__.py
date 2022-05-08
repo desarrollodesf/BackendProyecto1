@@ -159,9 +159,9 @@ class ContestResource(Resource):
         if 'user_id' in data:
             contest.user_id = data['user_id']
 
-        test_list = User.query.all()
-        if next((x for x in test_list if str(x.id) == str(contest.user_id)), None) is None:
-            return 'El ID del usuario utilizado para crear el concurso no existe', 400 
+        #test_list = User.query.all()
+        #if next((x for x in test_list if str(x.id) == str(contest.user_id)), None) is None:
+        #    return 'El ID del usuario utilizado para crear el concurso no existe', 400 
 
         if 'file' in request.files:
             f = request.files['file']
@@ -249,9 +249,9 @@ class ContestsResource(Resource):
                 if new_contest.startDate > new_contest.endDate:
                     return 'Fecha de inicio debe ser menor o igual a la fecha de fin', 400
 
-                test_list = User.query.all()
-                if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
-                    return 'El ID del usuario utilizado para crear el concurso no existe', 400
+                #test_list = User.query.all()
+                #if next((x for x in test_list if str(x.id) == str(new_contest.user_id)), None) is None:
+                 #   return 'El ID del usuario utilizado para crear el concurso no existe', 400
 
                 test_list = Contest.query.all()
                 if not next((x for x in test_list if str(x.url) == str(new_contest.url)), None) is None:
