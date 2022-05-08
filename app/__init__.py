@@ -76,10 +76,14 @@ if local_environment is True:
         setup_database(app)
 else:
     r = redis.StrictRedis(host='modelo-d-redis.vobf9i.0001.use1.cache.amazonaws.com', port=6379, db=0, socket_timeout=1)
-    dynamo_client = boto3.resource('dynamodb', region_name = 'us-east-1',     
+    session = boto3.Session(     
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-    aws_session_token=os.environ['S3_KEY'])
+    aws_session_token=os.environ['AWS_SESSION_TOKEN'],
+    region_name = 'us-east-1')
+
+    dynamo_client = session.resource('dynamodb')
+    #dynamo_client = session.resource('dynamodb', region_name = 'us-east-1')
 
 class Contest_Schema(ma.Schema):
     class Meta:
@@ -568,7 +572,7 @@ def upload_file(file_name, bucket):
     s3_client = boto3.client('s3',     
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-    aws_session_token=os.environ['S3_KEY'])
+    aws_session_token=os.environ['AWS_SESSION_TOKEN'])
     response = s3_client.upload_file(file_name, bucket, object_name)
 
     return response
@@ -582,7 +586,7 @@ def download_file(file_name, bucket):
     s3 = boto3.client('s3',     
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-    aws_session_token=os.environ['S3_KEY'])
+    aws_session_token=os.environ['AWS_SESSION_TOKEN'])
     s3.download_file(bucket, file_name, pathdownload)
 
     return pathdownload
@@ -593,7 +597,7 @@ def sendMessageQueue(nombreArchivo, idForm, email, name ):
     sqs = boto3.client('sqs', region_name = 'us-east-1',     
     aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-    aws_session_token=os.environ['S3_KEY'])
+    aws_session_token=os.environ['AWS_SESSION_TOKEN'])
 
     message = {"key": nombreArchivo, "id": idForm, "email": email , "name": name}
     response = sqs.send_message(
